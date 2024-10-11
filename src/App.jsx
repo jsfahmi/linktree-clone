@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactLoading from 'react-loading';
 import {
   Sun, Moon, ArrowUp, Mail, Menu, X, LinkIcon, Twitter
 } from 'lucide-react';
@@ -42,12 +43,18 @@ const links = [
 ];
 
 const donationLinks = [
-  { id: 1, title: 'Saweria', url: 'https://paypal.me/jsfahmi', icon: CiDollar },
-  { id: 2, title: 'PayPal', url: 'https://saweria.co/joesrilfahmi', icon: PiPaypalLogoLight },
+  { id: 1, title: 'PayPal', url: 'https://paypal.me/joesrilfahmi', icon: PiPaypalLogoLight },
+  { id: 2, title: 'Saweria', url: 'https://saweria.co/joesrilfahmi', icon: CiDollar },
 ];
 
+const LoadingScreen = ({ theme }) => (
+  <div className={`fixed inset-0 ${theme === 'light' ? 'bg-gray-50' : 'bg-gray-900'} flex items-center justify-center z-50`}>
+    <ReactLoading type="spin" color='#1DA1F2' height={50} width={50} />
+  </div>
+);
+
 const ImageSkeleton = () => (
-  <div className="w-32 h-32 rounded-full mx-auto mb-8 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+  <div className="w-32 h-32 mx-auto mb-8 bg-gray-200 rounded-full dark:bg-gray-700 animate-pulse" />
 );
 
 const EmptyState = ({ theme }) => (
@@ -74,7 +81,7 @@ const Sidebar = ({ isOpen, onClose, theme, toggleTheme }) => (
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 backdrop-blur-md bg-black/40 z-40"
+          className="fixed inset-0 z-40 backdrop-blur-md bg-black/40"
           onClick={onClose}
         />
         <motion.div
@@ -160,6 +167,7 @@ const App = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -170,7 +178,16 @@ const App = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timer);
+    };
   }, [theme]);
 
   useEffect(() => {
@@ -178,6 +195,10 @@ const App = () => {
     img.src = profileImage;
     img.onload = () => setImageLoaded(true);
   }, []);
+
+  if (loading) {
+    return <LoadingScreen theme={theme} />;
+  }
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-gray-50' : 'bg-gray-900'} transition-colors duration-500`}>
@@ -188,18 +209,18 @@ const App = () => {
         toggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
       />
 
-      <div className="container mx-auto px-4 py-16 max-w-2xl">
+      <div className="container max-w-2xl px-4 py-16 mx-auto">
         <motion.div
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
-          className="text-center mb-12"
+          className="mb-12 text-center"
         >
           {imageLoaded ? (
             <motion.img
               src={profileImage}
               alt="Profile"
-              className="w-32 h-32 rounded-full mx-auto mb-8 border-4 border-white dark:border-gray-800 shadow-xl"
+              className="w-32 h-32 mx-auto mb-8 border-4 border-white rounded-full shadow-xl dark:border-gray-800"
               animate={{
                 rotateY: [0, 360],
                 transition: {
@@ -231,7 +252,7 @@ const App = () => {
           initial="hidden"
           animate="visible"
           variants={staggerContainer}
-          className="space-y-4 mb-12"
+          className="mb-12 space-y-4"
         >
           {links.length > 0 ? (
             links.map((link, index) => (
@@ -248,7 +269,7 @@ const App = () => {
           animate="visible"
           className={`text-center ${theme === 'light' ? 'text-gray-600' : 'text-gray-400'}`}
         >
-          <h2 className="text-2xl font-bold mb-4">Contact</h2>
+          <h2 className="mb-4 text-2xl font-bold">Contact</h2>
           <p className="mb-2">
             <Mail className="inline mr-2" size={16} />
             joesrilfahmi@gmail.com
@@ -257,7 +278,7 @@ const App = () => {
         </motion.footer>
       </div>
 
-      <div className="fixed bottom-6 right-6 flex flex-col space-y-4">
+      <div className="fixed flex flex-col space-y-4 bottom-6 right-6">
         <AnimatePresence>
           {showScrollTop && (
             <motion.button
